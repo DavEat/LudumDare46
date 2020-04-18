@@ -53,19 +53,19 @@ public class Rock : GridEntity
 
     public void Broke()
     {
-        GameManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
+        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
         m_crtNode.rock = null;
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
     }
     public void Hit()
     {
-        GameManager.inst.AddAction(new TurnActionHit(durability, this));
+        BackInTimeManager.inst.AddAction(new TurnActionHit(durability, this));
         HitAction();
     }
     public void Hit(Node newNode)
     {
-        GameManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
+        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
 
         HitAction();
 

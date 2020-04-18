@@ -41,7 +41,7 @@ public class WaterBubble : GridEntity
     {
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Picked Up");
-        GameManager.inst.AddAction(new TurnActionPickedUp(this));
+        BackInTimeManager.inst.AddAction(new TurnActionPickedUp(this));
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
     }
@@ -50,7 +50,7 @@ public class WaterBubble : GridEntity
     {
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Spread");
-        GameManager.inst.AddAction(new TurnActionSpread(this));
+        BackInTimeManager.inst.AddAction(new TurnActionSpread(this));
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
     }

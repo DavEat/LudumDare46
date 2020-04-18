@@ -10,7 +10,7 @@ public class AntMove : GridEntity
     }
     public override void RevertTurn(ITurnAction action)
     {
-        GoTo(((TurnActionMove)action).node);
+        GoToAction(((TurnActionMove)action).node);
     }
 
     void Update()
@@ -96,12 +96,16 @@ public class AntMove : GridEntity
     }
     void GoTo(Node node)
     {
-        GameManager.inst.AddAction(new TurnActionMove(m_crtNode, this));
+        BackInTimeManager.inst.AddAction(new TurnActionMove(m_crtNode, this));
 
-        m_transform.position = node.worldPosition;
-        m_crtNode = node;
+        GoToAction(node);
 
         if (GameManager.inst.endTurn != null)
             GameManager.inst.CallEndTurn();
+    }
+    void GoToAction(Node node)
+    {
+        m_transform.position = node.worldPosition;
+        m_crtNode = node;
     }
 }
