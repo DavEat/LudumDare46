@@ -18,7 +18,8 @@ public class GameManager : Singleton<GameManager>
 
     public void CallEndTurn()
     {
-        endTurn.Invoke();
+        if (endTurn != null)
+            endTurn.Invoke();
         BackInTimeManager.inst.StoreCrtTurnActions();
     }
 }

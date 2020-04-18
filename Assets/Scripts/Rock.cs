@@ -6,8 +6,6 @@ public class Rock : GridEntity
 {
     [SerializeField] RockData m_data = null;
 
-    public Vector2 gridXY;
-
     int m_durability = 1;
 
     public bool breakable
@@ -35,9 +33,6 @@ public class Rock : GridEntity
     }
     public override void RevertTurn(ITurnAction action)
     {
-        if (durability <= 0)
-            gameObject.SetActive(true);
-
         if (action is TurnActionHit)
         {
             m_durability = ((TurnActionHit)action).durability;
@@ -49,12 +44,16 @@ public class Rock : GridEntity
             m_transform.position = crtNode.worldPosition;
             crtNode.rock = this;
         }
+
+        if (durability > 0)
+            gameObject.SetActive(true);
     }
 
     public void Broke()
     {
         BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
         crtNode.rock = null;
+        m_durability = 0;
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
     }

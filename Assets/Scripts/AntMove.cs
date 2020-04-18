@@ -103,10 +103,9 @@ public class AntMove : GridEntity
 
         GoToAction(node);
 
-        if (GameManager.inst.endTurn != null)
-            GameManager.inst.CallEndTurn();
-
         CheckVictoryCollectibles(node);
+
+       GameManager.inst.CallEndTurn();
     }
     void GoToAction(Node node)
     {
