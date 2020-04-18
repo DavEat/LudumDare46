@@ -26,7 +26,7 @@ public class WaterBubble : GridEntity
     /// <summary>Check if the water bubble can still live</summary>
     void CheckViability()
     {
-        if (m_crtNode.rock != null)
+        if (crtNode.rock != null)
         {
             Spread();
         }
@@ -37,7 +37,7 @@ public class WaterBubble : GridEntity
     }
 
     /// <summary>Player picked up the water</summary>
-    void PickUp()
+    public void PickUp()
     {
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Picked Up");

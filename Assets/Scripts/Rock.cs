@@ -31,7 +31,7 @@ public class Rock : GridEntity
 
         m_durability = m_data.durability;
 
-        m_crtNode.rock = this;
+        crtNode.rock = this;
     }
     public override void RevertTurn(ITurnAction action)
     {
@@ -45,16 +45,16 @@ public class Rock : GridEntity
         else if (action is TurnActionMoveHit)
         {
             m_durability = ((TurnActionMoveHit)action).durability;
-            m_crtNode = ((TurnActionMoveHit)action).node;
-            m_transform.position = m_crtNode.worldPosition;
-            m_crtNode.rock = this;
+            crtNode = ((TurnActionMoveHit)action).node;
+            m_transform.position = crtNode.worldPosition;
+            crtNode.rock = this;
         }
     }
 
     public void Broke()
     {
-        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
-        m_crtNode.rock = null;
+        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
+        crtNode.rock = null;
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
     }
@@ -65,14 +65,14 @@ public class Rock : GridEntity
     }
     public void Hit(Node newNode)
     {
-        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(m_crtNode, durability, this));
+        BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
 
         HitAction();
 
-        m_crtNode.rock = null;
-        m_crtNode = newNode;
-        m_crtNode.rock = this;
-        m_transform.position = m_crtNode.worldPosition;
+        crtNode.rock = null;
+        crtNode = newNode;
+        crtNode.rock = this;
+        m_transform.position = crtNode.worldPosition;
     }
 
     void HitAction()

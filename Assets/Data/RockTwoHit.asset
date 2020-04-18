@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a929dde8e26bfce4ea4a5678950d40f4, type: 3}
   m_Name: RockTwoHit
   m_EditorClassIdentifier: 
-  durability: 5
+  durability: 2

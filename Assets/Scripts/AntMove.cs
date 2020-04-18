@@ -92,20 +92,52 @@ public class AntMove : GridEntity
                     }
                 }
             } while (nextNode != null);
+
+            if (nextNode == null)
+                GoTo(previousNode);
         }
     }
     void GoTo(Node node)
     {
-        BackInTimeManager.inst.AddAction(new TurnActionMove(m_crtNode, this));
+        BackInTimeManager.inst.AddAction(new TurnActionMove(crtNode, this));
 
         GoToAction(node);
 
         if (GameManager.inst.endTurn != null)
             GameManager.inst.CallEndTurn();
+
+        CheckVictoryCollectibles(node);
     }
     void GoToAction(Node node)
     {
         m_transform.position = node.worldPosition;
-        m_crtNode = node;
+        crtNode = node;
+    }
+    void CheckVictoryCollectibles(Node node)
+    {
+        if (ReachEndLevel(node))
+        { }
+        else ReachCollectible(node);
+    }
+    bool ReachEndLevel(Node node)
+    {
+        Door d = LevelManager.inst.IsADoor(node);
+        if (d != null)
+        {
+            Debug.Log("Win go next");
+            d.Active();
+            return true;
+        }
+        return false;
+    }
+    bool ReachCollectible(Node node)
+    {
+        WaterBubble w = LevelManager.inst.IsAWaterBubble(node);
+        if (w != null)
+        {
+            w.PickUp();
+            return true;
+        }
+        return false;
     }
 }
