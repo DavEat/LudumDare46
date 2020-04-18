@@ -5,6 +5,7 @@ using UnityEngine;
 public class Rock : GridEntity
 {
     [SerializeField] RockData m_data = null;
+    [SerializeField] RockMesh m_meshs = null;
 
     int m_durability = 1;
 
@@ -40,6 +41,7 @@ public class Rock : GridEntity
         else if (action is TurnActionMoveHit)
         {
             m_durability = ((TurnActionMoveHit)action).durability;
+            crtNode.rock = null;
             crtNode = ((TurnActionMoveHit)action).node;
             m_transform.position = crtNode.worldPosition;
             crtNode.rock = this;
@@ -47,6 +49,18 @@ public class Rock : GridEntity
 
         if (durability > 0)
             gameObject.SetActive(true);
+
+        if (m_meshs != null)
+        {
+            if (m_durability == 1)
+            {
+                GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(true, m_data.durability == 1);
+            }
+            else if (m_durability == 2)
+            {
+                GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false);
+            }
+        }
     }
 
     public void Broke()
@@ -62,8 +76,14 @@ public class Rock : GridEntity
         BackInTimeManager.inst.AddAction(new TurnActionHit(durability, this));
         HitAction();
     }
-    public void Hit(Node newNode)
+    public void Hit(Node newNode, float speed)
     {
+        if (newNode == null)
+        {
+            Hit();
+            return;
+        }
+
         BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
 
         HitAction();
@@ -71,11 +91,28 @@ public class Rock : GridEntity
         crtNode.rock = null;
         crtNode = newNode;
         crtNode.rock = this;
-        m_transform.position = crtNode.worldPosition;
+
+        StartCoroutine(HitAnim(crtNode, speed));
+
+        //m_transform.position = crtNode.worldPosition;
     }
 
     void HitAction()
     {
         m_durability--;
+        if (m_durability == 1 && m_meshs != null)
+        {
+            GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(true, false);
+        }
+    }
+
+    IEnumerator HitAnim(Node position, float speed)
+    {
+        while ((position.worldPosition - m_transform.position).sqrMagnitude > .001f)
+        {
+            m_transform.position += ((position.worldPosition - m_transform.position).normalized * Time.deltaTime * speed);
+            yield return null;
+        }
+        m_transform.position = position.worldPosition;
     }
 }

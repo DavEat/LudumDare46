@@ -25,6 +25,15 @@ public class TurnActionMove : TurnAction, ITurnAction
         this.node = node;
     }
 }
+public class TurnActionMoveRotate : TurnActionMove, ITurnAction
+{
+    public float angleY;
+
+    public TurnActionMoveRotate(Node node, float angleY, GridEntity entity) : base(node, entity)
+    {
+        this.angleY = angleY;
+    }
+}
 public class TurnActionHit : TurnAction, ITurnAction
 {
     public int durability;
@@ -34,14 +43,12 @@ public class TurnActionHit : TurnAction, ITurnAction
         this.durability = durability;
     }
 }
-public class TurnActionMoveHit : TurnAction, ITurnAction
+public class TurnActionMoveHit : TurnActionMove, ITurnAction
 {
-    public Node node;
     public int durability;
 
-    public TurnActionMoveHit(Node node, int durability, GridEntity entity) : base(entity)
+    public TurnActionMoveHit(Node node, int durability, GridEntity entity) : base(node, entity)
     {
-        this.node = node;
         this.durability = durability;
     }
 }
