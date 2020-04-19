@@ -12,11 +12,18 @@ public class RockMesh : ScriptableObject
     [SerializeField] Mesh[] m_smallDamageSand = null;
     [SerializeField] Mesh[] m_smallDamageNoSand = null;
 
-    public Mesh GetMesh(bool bigDamage, bool sand)
+    [SerializeField] Mesh[] m_noDamageNoSand = null;
+
+    public Mesh GetMesh(bool bigDamage, bool sand, bool noDomage = false)
     {
         Mesh mesh;
 
-        if (bigDamage)
+        if(noDomage)
+        {
+            int index = Random.Range(0, m_noDamageNoSand.Length);
+            mesh = m_noDamageNoSand[index];
+        }
+        else if (bigDamage)
         {
             if (sand)
             {

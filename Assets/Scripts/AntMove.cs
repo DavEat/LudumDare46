@@ -7,16 +7,23 @@ public class AntMove : GridEntity
     [SerializeField] float m_moveSpeed = 1;
     float speedMul = 1f;
     bool m_animated = false;
-    bool m_isInAPit = false;
+    bool m_isInAPitOrACactus = false;
+
+    [SerializeField] Animator m_anim = null;
 
     protected override void Start()
     {
         base.Start();
+
+        if (m_anim == null)
+        {
+            m_anim = GetComponentInChildren<Animator>();
+        }
     }
     public override void RevertTurn(ITurnAction action)
     {
-        if (m_isInAPit)
-            m_isInAPit = false;
+        if (m_isInAPitOrACactus)
+            m_isInAPitOrACactus = false;
 
         TurnActionMoveRotate a = (TurnActionMoveRotate)action;
         m_transform.eulerAngles = Vector3.up * a.angleY;
@@ -38,7 +45,7 @@ public class AntMove : GridEntity
             return;
         }
 
-        if (m_isInAPit) return;
+        if (m_isInAPitOrACactus) return;
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -57,9 +64,12 @@ public class AntMove : GridEntity
             Move(Vector2.left);
         }
     }
-
+    List<float> jumpdst = new List<float>();
+    int totalDst = 0;
     void Move(Vector2 direction)
     {
+        jumpdst.Clear();
+
         Vector3 v3Dir = new Vector3(direction.x, 0, direction.y);
         Node node = Grid.inst.NodeFromWorldPoint(m_transform.position + v3Dir);
 
@@ -75,12 +85,19 @@ public class AntMove : GridEntity
                 FallIntoPit(node);
                 return;
             }
+            Cactus nodeCactus = LevelManager.inst.IsACactus(node);
+            if (nodeCactus != null)
+            {
+                FallIntoCactus(node);
+                return;
+            }
 
             int distance = 0;
             Node nextNode = null, previousNode = node;
             do
             {
                 distance++;
+                totalDst = distance;
                 if (nextNode != null) previousNode = nextNode;
 
                 nextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance));
@@ -108,7 +125,10 @@ public class AntMove : GridEntity
                             if (moveBlockTo != null && moveBlockToRock == null)
                             {
                                 //nextRock.Hit(moveBlockTo);
-                                GoTo(nextNode, nextRock, true, moveBlockTo);
+                                Cactus nextCactus = LevelManager.inst.IsACactus(moveBlockTo);
+                                if (nextCactus != null)
+                                     GoTo(previousNode, nextRock, true);
+                                else GoTo(nextNode, nextRock, true, moveBlockTo);
                             }
                             else
                             {
@@ -153,8 +173,27 @@ public class AntMove : GridEntity
                             }
                             else
                             {
-                                Debug.Log("Jump Above Pit: " + nextNode.worldPosition, nextPit.gameObject);
+                                Cactus nextCactus = LevelManager.inst.IsACactus(nextNode);
+                                if (nextCactus != null)
+                                {
+                                    FallIntoCactus(nextNode);
+                                    return;
+                                }
+                                else
+                                {
+                                    jumpdst.Add(distance);
+                                    Debug.Log("Jump Above Pit: " + nextNode.worldPosition, nextPit.gameObject);
+                                }
                             }
+                        }
+                    }
+                    else
+                    {
+                        Cactus nextCactus = LevelManager.inst.IsACactus(nextNode);
+                        if (nextCactus != null)
+                        {
+                            FallIntoCactus(nextNode);
+                            return;
                         }
                     }
                 }
@@ -211,10 +250,20 @@ public class AntMove : GridEntity
     {
         BackInTimeManager.inst.AddAction(new TurnActionMoveRotate(crtNode, m_transform.eulerAngles.y, this));
 
-        m_isInAPit = true;
+        m_isInAPitOrACactus = true;
         m_transform.position = node.worldPosition + Vector3.down * .6f;
         //crtNode = node;
         Debug.Log("Fall into pit: " + node.worldPosition);
+        GameManager.inst.CallEndTurn();
+    }
+    void FallIntoCactus(Node node)
+    {
+        BackInTimeManager.inst.AddAction(new TurnActionMoveRotate(crtNode, m_transform.eulerAngles.y, this));
+
+        m_isInAPitOrACactus = true;
+        m_transform.position = node.worldPosition;
+        //crtNode = node;
+        Debug.Log("Fall into cactus: " + node.worldPosition);
         GameManager.inst.CallEndTurn();
     }
     IEnumerator GoToActionAnim(Node node, Rock rock = null, bool hit = false, Node rockMoveTo = null)
@@ -222,8 +271,13 @@ public class AntMove : GridEntity
         m_animated = true;
 
         float dst;
+        bool jumping = false;
+        float jumpAt = 0;
+        totalDst++;
 
         m_transform.rotation = Quaternion.LookRotation((node.worldPosition - m_transform.position), Vector3.up);
+
+        m_anim.SetFloat("Speed", m_moveSpeed * speedMul);
 
         while ((dst = (m_transform.position - node.worldPosition).sqrMagnitude) > .001f)
         {
@@ -244,6 +298,32 @@ public class AntMove : GridEntity
                 }
             }
 
+            float dstNsqr = (m_transform.position - node.worldPosition).magnitude;
+            if (jumping)
+            {
+                if (dstNsqr < jumpAt)
+                {
+                    jumping = false;
+                    m_anim.SetBool("Jump", false);
+                }
+            }
+            else
+            {
+                float jump = -1;
+                foreach (float j in jumpdst)
+                {
+                    if (dstNsqr < (totalDst - (j + .55f)) * Grid.inst.nodeRadius * 2)
+                    {
+                        m_anim.SetBool("Jump", true);
+                        m_anim.SetTrigger("JumpTrigger");
+                        jumping = true;
+                        jump = j;
+                        jumpAt = ((totalDst - (j + 1.1f))) * Grid.inst.nodeRadius * 2;
+                    }
+                }
+                if (jump != -1) jumpdst.Remove(jump);
+            }
+
             m_transform.position += ((node.worldPosition - m_transform.position).normalized * Time.deltaTime * m_moveSpeed * speedMul);
             yield return null;
         }
@@ -252,6 +332,8 @@ public class AntMove : GridEntity
         crtNode = node;
 
         speedMul = 1f;
+        m_anim.SetFloat("Speed", 0);
+        m_anim.SetBool("Jump", false);
         m_animated = false;
 
         CheckVictoryCollectibles(node);

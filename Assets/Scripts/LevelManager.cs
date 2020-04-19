@@ -7,11 +7,13 @@ public class LevelManager : Singleton<LevelManager>
     List<Door> m_doors = new List<Door>();
     List<WaterBubble> m_waters = new List<WaterBubble>();
 
-    Dictionary<Node, Rock> rocks = new Dictionary<Node, Rock>();
-    Dictionary<Node, Pit> pits = new Dictionary<Node, Pit>();
+    Dictionary<Node, Rock> m_rocks = new Dictionary<Node, Rock>();
+    Dictionary<Node, Pit> m_pits = new Dictionary<Node, Pit>();
+    Dictionary<Node, Cactus> m_cactus = new Dictionary<Node, Cactus>();
 
     [SerializeField] Transform[] rockParents = null;
     [SerializeField] Transform pitParents = null;
+    [SerializeField] Transform m_cactusParents = null;
     [SerializeField] Transform doorsParent = null;
     [SerializeField] Transform waterParent = null;
 
@@ -27,24 +29,34 @@ public class LevelManager : Singleton<LevelManager>
             Rock[] r = rockParents[e].GetComponentsInChildren<Rock>();
             for (int i = 0; i < r.Length; i++)
             {
-                rocks.Add(r[i].crtNode, r[i]);
+                m_rocks.Add(r[i].crtNode, r[i]);
+            }
+        }
+        if (pitParents != null)
+        {
+            Pit[] p = pitParents.GetComponentsInChildren<Pit>();
+            for (int i = 0; i < p.Length; i++)
+            {
+                m_pits.Add(p[i].crtNode, p[i]);
+            }
+        }
+        if (m_cactusParents != null)
+        {
+            Cactus[] c = m_cactusParents.GetComponentsInChildren<Cactus>();
+            for (int i = 0; i < c.Length; i++)
+            {
+                m_cactus.Add(c[i].crtNode, c[i]);
             }
         }
 
-        Pit[] p = pitParents.GetComponentsInChildren<Pit>();
-        for (int i = 0; i < p.Length; i++)
-        {
-            pits.Add(p[i].crtNode, p[i]);
-        }
-
-        doorsParent.GetComponentsInChildren<Door>(m_doors);
-        waterParent.GetComponentsInChildren<WaterBubble>(m_waters);
+        if (doorsParent != null) doorsParent.GetComponentsInChildren<Door>(m_doors);
+        if (waterParent != null) waterParent.GetComponentsInChildren<WaterBubble>(m_waters);
     }
 
     public Rock IsARock(Node node)
     {
         Rock rock = null;
-        rocks.TryGetValue(node, out rock);
+        m_rocks.TryGetValue(node, out rock);
 
         if (rock != null && (rock.onAPit || !rock.gameObject.activeSelf))
         {
@@ -56,15 +68,15 @@ public class LevelManager : Singleton<LevelManager>
     public void UpdateRockNode(Node previousNode, Rock rock, Node newNode)
     {
         if (previousNode != null)
-            rocks.Remove(previousNode);
+            m_rocks.Remove(previousNode);
         if (newNode != null)
-            rocks.Add(newNode, rock);
+            m_rocks.Add(newNode, rock);
     }
 
     public Pit IsAPit(Node node)
     {
         Pit pit = null;
-        pits.TryGetValue(node, out pit);
+        m_pits.TryGetValue(node, out pit);
 
         if (pit != null && (pit.full || !pit.gameObject.activeSelf))
         {
@@ -76,9 +88,21 @@ public class LevelManager : Singleton<LevelManager>
     public void UpdatePitNode(Node previousNode, Pit pit, Node newNode)
     {
         if (previousNode != null)
-            pits.Remove(previousNode);
+            m_pits.Remove(previousNode);
         if (newNode != null)
-            pits.Add(newNode, pit);
+            m_pits.Add(newNode, pit);
+    }
+    public Cactus IsACactus(Node node)
+    {
+        Cactus cactus = null;
+        m_cactus.TryGetValue(node, out cactus);
+
+        if (cactus != null && !cactus.gameObject.activeSelf)
+        {
+            cactus = null;
+        }
+
+        return cactus;
     }
 
     public Door IsADoor(Node node)

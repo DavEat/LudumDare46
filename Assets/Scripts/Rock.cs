@@ -69,6 +69,10 @@ public class Rock : GridEntity
             {
                 GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false);
             }
+            else if (m_durability == 3)
+            {
+                GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false, true);
+            }
         }
     }
 
@@ -119,9 +123,12 @@ public class Rock : GridEntity
     void HitAction()
     {
         m_durability--;
-        if (m_durability == 1 && m_meshs != null)
+        if (m_meshs != null)
         {
-            GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(true, false);
+            if (m_durability == 1)
+                GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(true, false);
+            else if(m_durability == 2)
+                GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false);
         }
     }
 
