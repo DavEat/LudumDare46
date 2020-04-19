@@ -9,10 +9,12 @@ public class RockMesh : ScriptableObject
     [SerializeField] Mesh[] m_bigDamageSand = null;
     [SerializeField] Mesh[] m_bigDamageNoSand = null;
 
-    [SerializeField] Mesh[] m_smallDamageSand = null;
+    //[SerializeField] Mesh[] m_smallDamageSand = null;
     [SerializeField] Mesh[] m_smallDamageNoSand = null;
 
     [SerializeField] Mesh[] m_noDamageNoSand = null;
+
+    [SerializeField] RockDestruction m_destruction = null;
 
     public Mesh GetMesh(bool bigDamage, bool sand, bool noDomage = false)
     {
@@ -38,17 +40,22 @@ public class RockMesh : ScriptableObject
         }
         else
         {
-            if (sand)
+            /*if (sand)
             {
                 int index = Random.Range(0, m_smallDamageSand.Length);
                 mesh = m_smallDamageSand[index];
             }
-            else
+            else*/
             {
                 int index = Random.Range(0, m_smallDamageNoSand.Length);
                 mesh = m_smallDamageNoSand[index];
             }
         }
         return mesh;
+    }
+
+    public void SpawnDestruction(Vector3 position, Vector3 forward)
+    {
+        Instantiate(m_destruction, position, Quaternion.LookRotation(forward, Vector3.up));
     }
 }

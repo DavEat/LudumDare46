@@ -29,6 +29,8 @@ public class LevelManager : Singleton<LevelManager>
             Rock[] r = rockParents[e].GetComponentsInChildren<Rock>();
             for (int i = 0; i < r.Length; i++)
             {
+                if (m_rocks.ContainsKey(r[i].crtNode))
+                    continue;
                 m_rocks.Add(r[i].crtNode, r[i]);
             }
         }

@@ -76,7 +76,7 @@ public class Rock : GridEntity
         }
     }
 
-    public void Broke()
+    public void Broke(Vector3 antForward)
     {
         BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
         //crtNode.rock = null;
@@ -84,6 +84,10 @@ public class Rock : GridEntity
         m_durability = 0;
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
+        if (m_meshs != null)
+        {
+            m_meshs.SpawnDestruction(m_transform.position, antForward);
+        }
     }
     public void Hit()
     {
@@ -112,10 +116,11 @@ public class Rock : GridEntity
         {
             pit.FullIt();
             m_onAPit = true;
-            m_transform.position = crtNode.worldPosition + Vector3.down;
+            //m_transform.position = crtNode.worldPosition + Vector3.down;
             Debug.Log("Rock is on a pit", gameObject);
+            StartCoroutine(HitAnim(crtNode, speed, true));
         }
-        else StartCoroutine(HitAnim(crtNode, speed));
+        else StartCoroutine(HitAnim(crtNode, speed, false));
 
         //m_transform.position = crtNode.worldPosition;
     }
@@ -132,12 +137,15 @@ public class Rock : GridEntity
         }
     }
 
-    IEnumerator HitAnim(Node node, float speed)
+    IEnumerator HitAnim(Node node, float speed, bool isApit)
     {
         float dst;
         bool checkWaterBubble = false;
 
-        while ((dst = (node.worldPosition - m_transform.position).sqrMagnitude) > .001f)
+        Vector2 nodePos = new Vector2(node.worldPosition.x, node.worldPosition.z);
+        Vector2 rockPos;
+
+        while ((dst = ((rockPos = new Vector2(m_transform.position.x, m_transform.position.z)) - nodePos).sqrMagnitude) > .001f)
         {
             if (!checkWaterBubble && dst < .5f)
             {
@@ -145,9 +153,20 @@ public class Rock : GridEntity
                 if (w) w.Spread();
             }
 
+            if (isApit)
+            {
+                float d = (nodePos - rockPos).magnitude;
+                if (d < .3f)
+                {
+                    float y = Mathf.Lerp(m_transform.position.y, -1.0f, 1 - (d / .3f));
+                    m_transform.position = new Vector3(m_transform.position.x, y, m_transform.position.z);
+                }
+            }
+
             m_transform.position += ((node.worldPosition - m_transform.position).normalized * Time.deltaTime * speed);
             yield return null;
         }
-        m_transform.position = node.worldPosition;
+        //m_transform.position = node.worldPosition;
+        m_transform.position = new Vector3(node.worldPosition.x, m_transform.position.y, node.worldPosition.z);
     }
 }

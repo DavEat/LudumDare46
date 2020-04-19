@@ -16,10 +16,12 @@ public class WaterBubble : GridEntity
         if (action is TurnActionPickedUp)
         {
             Debug.Log("Revert Water Picked Up");
+            Score.inst.RevertScore();
         }
         else if (action is TurnActionSpread)
         {
             Debug.Log("Revert Water Spread");
+            m_transform.parent.gameObject.SetActive(true);
         }
     }
 
@@ -42,8 +44,9 @@ public class WaterBubble : GridEntity
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Picked Up");
         BackInTimeManager.inst.AddAction(new TurnActionPickedUp(this));
-        //Destroy(gameObject, .2f);
+        Score.inst.AddScore();
         gameObject.SetActive(false);
+        //Destroy(gameObject, .2f);
     }
     /// <summary>Lose the water in the ground</summary>
     public void Spread()
@@ -51,7 +54,8 @@ public class WaterBubble : GridEntity
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Spread");
         BackInTimeManager.inst.AddAction(new TurnActionSpread(this));
-        //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
+        m_transform.parent.gameObject.SetActive(false);
+        //Destroy(gameObject, .2f);
     }
 }

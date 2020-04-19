@@ -64,3 +64,7 @@ public class TurnActionFull : TurnAction, ITurnAction
 {
     public TurnActionFull(GridEntity entity) : base(entity) { }
 }
+public class TurnActionDestroy : TurnAction, ITurnAction
+{
+    public TurnActionDestroy(GridEntity entity) : base(entity) { }
+}
