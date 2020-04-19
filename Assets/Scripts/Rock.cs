@@ -8,6 +8,8 @@ public class Rock : GridEntity
     [SerializeField] RockMesh m_meshs = null;
 
     int m_durability = 1;
+    bool m_onAPit = false;
+    public bool onAPit { get { return m_onAPit; } }
 
     public bool breakable
     {
@@ -30,7 +32,7 @@ public class Rock : GridEntity
 
         m_durability = m_data.durability;
 
-        crtNode.rock = this;
+        //crtNode.rock = this;
     }
     public override void RevertTurn(ITurnAction action)
     {
@@ -40,12 +42,19 @@ public class Rock : GridEntity
         }
         else if (action is TurnActionMoveHit)
         {
-            m_durability = ((TurnActionMoveHit)action).durability;
-            crtNode.rock = null;
-            crtNode = ((TurnActionMoveHit)action).node;
+            TurnActionMoveHit a = (TurnActionMoveHit)action;
+            m_durability = a.durability;
+            //crtNode.rock = null;
+
+            LevelManager.inst.UpdateRockNode(crtNode, this, a.node);
+
+            crtNode = a.node;
             m_transform.position = crtNode.worldPosition;
-            crtNode.rock = this;
+            //crtNode.rock = this;
         }
+
+        if (m_onAPit)
+            m_onAPit = false;
 
         if (durability > 0)
             gameObject.SetActive(true);
@@ -66,7 +75,8 @@ public class Rock : GridEntity
     public void Broke()
     {
         BackInTimeManager.inst.AddAction(new TurnActionMoveHit(crtNode, durability, this));
-        crtNode.rock = null;
+        //crtNode.rock = null;
+        LevelManager.inst.UpdateRockNode(crtNode, this, null);
         m_durability = 0;
         //Destroy(gameObject, .2f);
         gameObject.SetActive(false);
@@ -88,11 +98,20 @@ public class Rock : GridEntity
 
         HitAction();
 
-        crtNode.rock = null;
+        //crtNode.rock = null;
+        LevelManager.inst.UpdateRockNode(crtNode, this, newNode);
         crtNode = newNode;
-        crtNode.rock = this;
+        //crtNode.rock = this;
 
-        StartCoroutine(HitAnim(crtNode, speed));
+        Pit pit = LevelManager.inst.IsAPit(newNode);
+        if (pit != null)
+        {
+            pit.FullIt();
+            m_onAPit = true;
+            m_transform.position = crtNode.worldPosition + Vector3.down;
+            Debug.Log("Rock is on a pit", gameObject);
+        }
+        else StartCoroutine(HitAnim(crtNode, speed));
 
         //m_transform.position = crtNode.worldPosition;
     }
@@ -106,13 +125,22 @@ public class Rock : GridEntity
         }
     }
 
-    IEnumerator HitAnim(Node position, float speed)
+    IEnumerator HitAnim(Node node, float speed)
     {
-        while ((position.worldPosition - m_transform.position).sqrMagnitude > .001f)
+        float dst;
+        bool checkWaterBubble = false;
+
+        while ((dst = (node.worldPosition - m_transform.position).sqrMagnitude) > .001f)
         {
-            m_transform.position += ((position.worldPosition - m_transform.position).normalized * Time.deltaTime * speed);
+            if (!checkWaterBubble && dst < .5f)
+            {
+                WaterBubble w = LevelManager.inst.IsAWaterBubble(node);
+                if (w) w.Spread();
+            }
+
+            m_transform.position += ((node.worldPosition - m_transform.position).normalized * Time.deltaTime * speed);
             yield return null;
         }
-        m_transform.position = position.worldPosition;
+        m_transform.position = node.worldPosition;
     }
 }

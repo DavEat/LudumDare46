@@ -7,6 +7,7 @@ public class AntMove : GridEntity
     [SerializeField] float m_moveSpeed = 1;
     float speedMul = 1f;
     bool m_animated = false;
+    bool m_isInAPit = false;
 
     protected override void Start()
     {
@@ -14,6 +15,9 @@ public class AntMove : GridEntity
     }
     public override void RevertTurn(ITurnAction action)
     {
+        if (m_isInAPit)
+            m_isInAPit = false;
+
         TurnActionMoveRotate a = (TurnActionMoveRotate)action;
         m_transform.eulerAngles = Vector3.up * a.angleY;
         GoToAction(a.node);
@@ -27,6 +31,14 @@ public class AntMove : GridEntity
     void Inputs()
     {
         if (m_animated) return;
+
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            BackInTimeManager.inst.GoBackInTime();
+            return;
+        }
+
+        if (m_isInAPit) return;
 
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -44,10 +56,6 @@ public class AntMove : GridEntity
         {
             Move(Vector2.left);
         }
-        else if (Input.GetKeyDown(KeyCode.Backspace))
-        {
-            BackInTimeManager.inst.GoBackInTime();
-        }
     }
 
     void Move(Vector2 direction)
@@ -57,7 +65,16 @@ public class AntMove : GridEntity
 
         if (node != null)
         {
-            if (!node.walkable || node.rock != null) return; //can't push block
+            Rock nodeRock = LevelManager.inst.IsARock(node);
+
+            if (!node.walkable || nodeRock != null) return; //can't push block
+
+            Pit nodePit = LevelManager.inst.IsAPit(node);
+            if (nodePit != null)
+            {
+                FallIntoPit(node);
+                return;
+            }
 
             int distance = 0;
             Node nextNode = null, previousNode = node;
@@ -68,31 +85,35 @@ public class AntMove : GridEntity
 
                 nextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance));
 
-                if (nextNode == null)
+                if (nextNode == null || nextNode == previousNode)
                     break;
 
-                if (nextNode.rock != null)
+                Rock nextRock = LevelManager.inst.IsARock(nextNode);
+
+                if (nextRock != null)
                 {
-                    if (nextNode.rock.breakable && distance > 1)
+                    if (nextRock.breakable && distance > 1)
                     {
-                        if (nextNode.rock.durability == 1)
+                        if (nextRock.durability == 1)
                         {
-                            //nextNode.rock.Broke();
-                            GoTo(nextNode, nextNode.rock, false);
+                            //nextRock.Broke();
+                            GoTo(nextNode, nextRock, false);
                             break;
                         }
                         else
                         {
                             Node moveBlockTo = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance + 1));
-                            if (moveBlockTo != null && moveBlockTo.rock == null)
+                            Rock moveBlockToRock = LevelManager.inst.IsARock(moveBlockTo);
+
+                            if (moveBlockTo != null && moveBlockToRock == null)
                             {
-                                //nextNode.rock.Hit(moveBlockTo);
-                                GoTo(nextNode, nextNode.rock, true, moveBlockTo);
+                                //nextRock.Hit(moveBlockTo);
+                                GoTo(nextNode, nextRock, true, moveBlockTo);
                             }
                             else
                             {
-                                //nextNode.rock.Hit();
-                                GoTo(previousNode, nextNode.rock, true);
+                                //nextRock.Hit();
+                                GoTo(previousNode, nextRock, true);
                             }
                         }
                         break;
@@ -107,6 +128,34 @@ public class AntMove : GridEntity
 
                         GoTo(previousNode);
                         break;
+                    }
+                }
+                else
+                {
+                    Pit nextPit = LevelManager.inst.IsAPit(nextNode);
+                    if (nextPit != null)
+                    {
+                        Node nextnextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance + 1));
+                        Pit nextnextPit = LevelManager.inst.IsAPit(nextnextNode);
+
+                        if (nextnextPit != null)
+                        {
+                            FallIntoPit(nextnextNode);
+                            return;
+                        }
+                        else
+                        {
+                            Rock nextnextRock = LevelManager.inst.IsARock(nextnextNode);
+                            if (nextnextRock != null)
+                            {
+                                FallIntoPit(nextNode);
+                                return;
+                            }
+                            else
+                            {
+                                Debug.Log("Jump Above Pit: " + nextNode.worldPosition, nextPit.gameObject);
+                            }
+                        }
                     }
                 }
             } while (nextNode != null);
@@ -157,6 +206,16 @@ public class AntMove : GridEntity
             return true;
         }
         return false;
+    }
+    void FallIntoPit(Node node)
+    {
+        BackInTimeManager.inst.AddAction(new TurnActionMoveRotate(crtNode, m_transform.eulerAngles.y, this));
+
+        m_isInAPit = true;
+        m_transform.position = node.worldPosition + Vector3.down * .6f;
+        //crtNode = node;
+        Debug.Log("Fall into pit: " + node.worldPosition);
+        GameManager.inst.CallEndTurn();
     }
     IEnumerator GoToActionAnim(Node node, Rock rock = null, bool hit = false, Node rockMoveTo = null)
     {

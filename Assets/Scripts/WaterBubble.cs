@@ -8,7 +8,7 @@ public class WaterBubble : GridEntity
     {
         base.Start();
 
-        GameManager.inst.endTurn += CheckViability;
+        //GameManager.inst.endTurn += CheckViability;
     }
     public override void RevertTurn(ITurnAction action)
     {
@@ -26,10 +26,10 @@ public class WaterBubble : GridEntity
     /// <summary>Check if the water bubble can still live</summary>
     void CheckViability()
     {
-        if (crtNode.rock != null)
+        /*if (crtNode.rock != null)
         {
             Spread();
-        }
+        }*/
         /*else if (m_crtNode == AntMove.node)
         {
             PickUp();
@@ -46,7 +46,7 @@ public class WaterBubble : GridEntity
         gameObject.SetActive(false);
     }
     /// <summary>Lose the water in the ground</summary>
-    void Spread()
+    public void Spread()
     {
         GameManager.inst.endTurn -= CheckViability;
         Debug.Log("Water Spread");

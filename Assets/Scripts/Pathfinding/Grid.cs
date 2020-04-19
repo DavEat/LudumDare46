@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class Grid : Singleton<Grid> {
+public class Grid : Singleton<Grid>
+{
 
     public bool displayGridGizmos;
 
@@ -78,7 +79,7 @@ public class Grid : Singleton<Grid> {
         int[,] penaltiesHorizontalPass = new int[gridSizeX, gridSizeY];
         int[,] penaltiesVerticalPass = new int[gridSizeX, gridSizeY];
 
-        for (int y  = 0; y < gridSizeY; y++)
+        for (int y = 0; y < gridSizeY; y++)
         {
             for (int x = -kernelExtents; x < kernelExtents; x++)
             {
@@ -90,7 +91,7 @@ public class Grid : Singleton<Grid> {
                 int removeIndex = Mathf.Clamp(x - kernelExtents - 1, 0, gridSizeX);
                 int addIndex = Mathf.Clamp(x + kernelExtents, 0, gridSizeX - 1);
 
-                penaltiesHorizontalPass[x, y] = penaltiesHorizontalPass[x - 1, y] - grid[removeIndex, y].movementPenalty + grid[addIndex, y].movementPenalty; 
+                penaltiesHorizontalPass[x, y] = penaltiesHorizontalPass[x - 1, y] - grid[removeIndex, y].movementPenalty + grid[addIndex, y].movementPenalty;
             }
         }
 
@@ -198,7 +199,7 @@ public class Grid : Singleton<Grid> {
 
                 if (!n.walkable)
                     c = Color.red;
-                else if (n.rock != null) c = Color.blue;
+                //else if (n.rock != null) c = Color.blue;
                 else c = Color.Lerp(Color.white, Color.black, Mathf.InverseLerp(penaltyMin, penaltyMax, n.movementPenalty));
 
                 c.a = .5f;

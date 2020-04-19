@@ -14,8 +14,6 @@ public class Node : IHeapItem<Node> {
 
     private int heapIndex;
 
-    public Rock rock = null;
-
     public Node(bool walkable, Vector3 worldPosition, int gridX, int gridY, int movementPenalty)
     {
         this.walkable = walkable;

@@ -60,3 +60,7 @@ public class TurnActionPickedUp : TurnAction, ITurnAction
 {
     public TurnActionPickedUp(GridEntity entity) : base(entity) { }
 }
+public class TurnActionFull : TurnAction, ITurnAction
+{
+    public TurnActionFull(GridEntity entity) : base(entity) { }
+}
