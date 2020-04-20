@@ -275,7 +275,7 @@ public class AntMove : GridEntity
     {
         m_animated = true;
 
-        float dst;
+        //float dst;
         bool jumping = false;
         float jumpAt = 0;
         totalDst++;
@@ -287,10 +287,24 @@ public class AntMove : GridEntity
 
         Vector2 nodePos = new Vector2(node.worldPosition.x, node.worldPosition.z);
         Vector2 antPos;
+        Vector2 startAntPos = new Vector2(m_transform.position.x, m_transform.position.z);
 
-        while ((dst = ((antPos = new Vector2(m_transform.position.x, m_transform.position.z)) - nodePos).sqrMagnitude) > .001f)
+        float totalDistance = (nodePos - startAntPos).sqrMagnitude - .002f;
+
+        bool forward = true;
+        //while ((dst = ((antPos = new Vector2(m_transform.position.x, m_transform.position.z)) - nodePos).sqrMagnitude) > .001f)
+        while (forward)
         {
-            SoundManager.inst.PlayFoot();
+            antPos = new Vector2(m_transform.position.x, m_transform.position.z);
+
+            if ((startAntPos - antPos).sqrMagnitude > totalDistance)
+            {
+                forward = false;
+            }
+
+            //dst = (startAntPos - antPos).sqrMagnitude - (nodePos - startAntPos).sqrMagnitude;
+
+            SoundManager.inst.PlayFoot(speedMul);
 
             float dstNsqr = (antPos - nodePos).magnitude;
             if (!inLoseAnim)
@@ -299,13 +313,13 @@ public class AntMove : GridEntity
                 {
                     if (hit)
                     {
-                        if (dst < Grid.inst.nodeRadius * 1.8f)
+                        if (dstNsqr < Grid.inst.nodeRadius * 1.8f)
                         {
                             rock.Hit(rockMoveTo, m_moveSpeed);
                             rock = null;
                         }
                     }
-                    else if (dst < Grid.inst.nodeRadius * 1f)
+                    else if (dstNsqr < Grid.inst.nodeRadius * 1f)
                     {
                         rock.Broke(m_transform.forward);
                         rock = null;
@@ -343,6 +357,7 @@ public class AntMove : GridEntity
                     if (dstNsqr < .6f * Grid.inst.nodeRadius * 2)
                     {
                         inLoseAnim = true;
+                        totalDistance -= .1f;
                         Debug.Log("cactus anim");
                     }
                 }
@@ -351,6 +366,7 @@ public class AntMove : GridEntity
                     if (dstNsqr < .4f * Grid.inst.nodeRadius * 2)
                     {
                         inLoseAnim = true;
+                        totalDistance -= .1f;
                         Debug.Log("pit anim");
                     }
                 }

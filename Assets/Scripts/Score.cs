@@ -28,6 +28,7 @@ public class Score : Singleton<Score>
 
         if (scene.buildIndex == 0)
         {
+            m_score = 0;
             Score[] scores = FindObjectsOfType<Score>();
             for (int i = 0; i < scores.Length; i++)
             {

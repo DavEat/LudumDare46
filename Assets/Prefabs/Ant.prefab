@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_moveSpeed: 6
-  m_fallSpeed: 8
+  m_fallSpeed: 10
   m_anim: {fileID: 7099300384999746220}
 --- !u!1001 &7099300385851651909
 PrefabInstance:

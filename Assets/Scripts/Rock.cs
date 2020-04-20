@@ -89,8 +89,8 @@ public class Rock : GridEntity
             m_meshs.SpawnDestruction(m_transform.position, antForward);
         }
 
-        SoundManager.inst.PlayRocks();
-        SoundManager.inst.PlayRocks();
+        //SoundManager.inst.PlayRocks();
+        SoundManager.inst.PlayRocks(1f);
     }
     public void Hit()
     {
@@ -110,8 +110,8 @@ public class Rock : GridEntity
         HitAction();
 
         //crtNode.rock = null;
-        LevelManager.inst.UpdateRockNode(crtNode, this, newNode);
-        crtNode = newNode;
+        //LevelManager.inst.UpdateRockNode(crtNode, this, newNode);
+        //crtNode = newNode;
         //crtNode.rock = this;
 
         Pit pit = LevelManager.inst.IsAPit(newNode);
@@ -121,9 +121,12 @@ public class Rock : GridEntity
             m_onAPit = true;
             //m_transform.position = crtNode.worldPosition + Vector3.down;
             Debug.Log("Rock is on a pit", gameObject);
-            StartCoroutine(HitAnim(crtNode, speed, true));
+            StartCoroutine(HitAnim(newNode, speed, true));
         }
-        else StartCoroutine(HitAnim(crtNode, speed, false));
+        else
+        {
+            StartCoroutine(HitAnim(newNode, speed, false));
+        }
 
         //m_transform.position = crtNode.worldPosition;
     }
@@ -139,20 +142,31 @@ public class Rock : GridEntity
                 GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false);
         }
 
-        SoundManager.inst.PlayRocks();
+        SoundManager.inst.PlayRocks(.7f);
     }
 
     IEnumerator HitAnim(Node node, float speed, bool isApit)
     {
-        float dst;
+        //float dst;
         bool checkWaterBubble = false;
 
         Vector2 nodePos = new Vector2(node.worldPosition.x, node.worldPosition.z);
         Vector2 rockPos;
+        Vector2 startRockPos = new Vector2(m_transform.position.x, m_transform.position.z);
 
-        while ((dst = ((rockPos = new Vector2(m_transform.position.x, m_transform.position.z)) - nodePos).sqrMagnitude) > .001f)
+        float totalDistance = (startRockPos - nodePos).sqrMagnitude - .1f;
+
+        bool forward = true;
+
+        while (forward)
         {
-            if (!checkWaterBubble && dst < .5f)
+            rockPos = new Vector2(m_transform.position.x, m_transform.position.z);
+            if ((startRockPos - rockPos).sqrMagnitude > totalDistance)
+            {
+                forward = false;
+            }
+
+            if (!checkWaterBubble && (rockPos - nodePos).sqrMagnitude < .5f)
             {
                 WaterBubble w = LevelManager.inst.IsAWaterBubble(node);
                 if (w) w.Spread();
@@ -173,5 +187,8 @@ public class Rock : GridEntity
         }
         //m_transform.position = node.worldPosition;
         m_transform.position = new Vector3(node.worldPosition.x, m_transform.position.y, node.worldPosition.z);
+
+        LevelManager.inst.UpdateRockNode(crtNode, this, isApit ? null : node);
+        crtNode = isApit ? null : node;
     }
 }

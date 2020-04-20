@@ -10412,6 +10412,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3692659008969409105, guid: 668dffa97ff063947958788460982a7c,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3692659008969409111, guid: 668dffa97ff063947958788460982a7c,
         type: 3}
       propertyPath: m_Name
@@ -12680,6 +12685,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: '[LevelManager]'
       objectReference: {fileID: 0}
+    - target: {fileID: 6382620226480235206, guid: 002231ab722d9fd44b38145c24f08d20,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6382620226480235207, guid: 002231ab722d9fd44b38145c24f08d20,
         type: 3}
       propertyPath: m_doors.Array.size
@@ -12735,6 +12745,11 @@ PrefabInstance:
       propertyPath: pitParents
       value: 
       objectReference: {fileID: 1060863949}
+    - target: {fileID: 6382620226480235207, guid: 002231ab722d9fd44b38145c24f08d20,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 002231ab722d9fd44b38145c24f08d20, type: 3}
 --- !u!4 &6382620228225639415 stripped
@@ -12947,16 +12962,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2454072415223609168, guid: 857f9d0ef513795459164f961a180493,
-        type: 3}
-      propertyPath: m_Volume
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8811641912071144334, guid: 857f9d0ef513795459164f961a180493,
-        type: 3}
-      propertyPath: m_Volume
-      value: 0.25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 857f9d0ef513795459164f961a180493, type: 3}

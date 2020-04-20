@@ -3,8 +3,6 @@
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        _Lines("Lines", Float) = 64
-        _Rows("Rows", Float) = 64
     }
     SubShader
     {
