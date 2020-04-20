@@ -47,6 +47,8 @@ public class WaterBubble : GridEntity
         Score.inst.AddScore();
         gameObject.SetActive(false);
         //Destroy(gameObject, .2f);
+
+        SoundManager.inst.PlayWater();
     }
     /// <summary>Lose the water in the ground</summary>
     public void Spread()

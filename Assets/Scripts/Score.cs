@@ -31,7 +31,7 @@ public class Score : Singleton<Score>
             Score[] scores = FindObjectsOfType<Score>();
             for (int i = 0; i < scores.Length; i++)
             {
-                if (scores[i] != this)
+                if (scores[i] != Score.inst)
                     Destroy(scores[i].gameObject);
             }
         }

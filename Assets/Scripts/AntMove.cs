@@ -290,6 +290,8 @@ public class AntMove : GridEntity
 
         while ((dst = ((antPos = new Vector2(m_transform.position.x, m_transform.position.z)) - nodePos).sqrMagnitude) > .001f)
         {
+            SoundManager.inst.PlayFoot();
+
             float dstNsqr = (antPos - nodePos).magnitude;
             if (!inLoseAnim)
             {
@@ -330,6 +332,8 @@ public class AntMove : GridEntity
                             jumping = true;
                             jump = j;
                             jumpAt = ((totalDst - (j + 1.1f))) * Grid.inst.nodeRadius * 2;
+
+                            SoundManager.inst.PlayJump();
                         }
                     }
                     if (jump != -1) jumpdst.Remove(jump);

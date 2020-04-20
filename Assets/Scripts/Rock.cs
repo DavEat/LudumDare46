@@ -88,6 +88,9 @@ public class Rock : GridEntity
         {
             m_meshs.SpawnDestruction(m_transform.position, antForward);
         }
+
+        SoundManager.inst.PlayRocks();
+        SoundManager.inst.PlayRocks();
     }
     public void Hit()
     {
@@ -135,6 +138,8 @@ public class Rock : GridEntity
             else if(m_durability == 2)
                 GetComponent<MeshFilter>().sharedMesh = m_meshs.GetMesh(false, false);
         }
+
+        SoundManager.inst.PlayRocks();
     }
 
     IEnumerator HitAnim(Node node, float speed, bool isApit)
