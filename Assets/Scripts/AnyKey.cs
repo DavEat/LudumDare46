@@ -42,6 +42,11 @@ public class AnyKey : MonoBehaviour
             //Move(Vector2.left);
             GoNext();
         }
+
+        if (Input.touchCount > 0 && Input.touches[0].phase == TouchPhase.Ended)
+        {
+            GoNext();
+        }
     }
 
     void GoNext()

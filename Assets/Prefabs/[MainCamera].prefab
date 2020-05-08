@@ -43,7 +43,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 1, g: 0.7254902, b: 0.24705884, a: 0}
+  m_BackGroundColor: {r: 1, g: 0.7058824, b: 0.23137257, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -96,4 +96,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3cbe8b461cdb174abd56612f63844a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_pixelRation: 0.3
   m_effectMat: {fileID: 2100000, guid: 9ee432ec45c6cdb43a7e1bfe5431ff2a, type: 2}

@@ -12,6 +12,13 @@ public class AntMove : GridEntity
 
     [SerializeField] Animator m_anim = null;
 
+    List<float> m_jumpdst = new List<float>();
+    int m_totalDst = 0;
+
+    float m_antYPos = 0;
+    float m_antInAPitYPos = -.6f;
+
+
     protected override void Start()
     {
         base.Start();
@@ -44,7 +51,7 @@ public class AntMove : GridEntity
 
         if (Input.GetKeyUp(KeyCode.Backspace))
         {
-            BackInTimeManager.inst.GoBackInTime();
+            BackInTime();
             return;
         }
 
@@ -67,12 +74,33 @@ public class AntMove : GridEntity
             Move(Vector2.left);
         }
     }
-    List<float> jumpdst = new List<float>();
-    int totalDst = 0;
 
-    void Move(Vector2 direction)
+    public void BackInTime()
     {
-        jumpdst.Clear();
+        BackInTimeManager.inst.GoBackInTime();
+    }
+    public void Move(int direction)
+    {
+        switch(direction)
+        {
+            case 0:
+                Move(Vector2.up);
+                break;
+            case 1:
+                Move(Vector2.down);
+                break;
+            case 2:
+                Move(Vector2.right);
+                break;
+            case 3:
+                Move(Vector2.left);
+                break;
+        }
+    }
+
+    public void Move(Vector2 direction)
+    {
+        m_jumpdst.Clear();
 
         Vector3 v3Dir = new Vector3(direction.x, 0, direction.y);
         Node node = Grid.inst.NodeFromWorldPoint(m_transform.position + v3Dir);
@@ -101,7 +129,7 @@ public class AntMove : GridEntity
             do
             {
                 distance++;
-                totalDst = distance;
+                m_totalDst = distance;
                 if (nextNode != null) previousNode = nextNode;
 
                 nextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance));
@@ -185,7 +213,7 @@ public class AntMove : GridEntity
                                 }
                                 else
                                 {
-                                    jumpdst.Add(distance);
+                                    m_jumpdst.Add(distance);
                                     Debug.Log("Jump Above Pit: " + nextNode.worldPosition, nextPit.gameObject);
                                 }
                             }
@@ -278,7 +306,7 @@ public class AntMove : GridEntity
         //float dst;
         bool jumping = false;
         float jumpAt = 0;
-        totalDst++;
+        m_totalDst++;
         bool inLoseAnim = false;
 
         m_transform.rotation = Quaternion.LookRotation((node.worldPosition - m_transform.position), Vector3.up);
@@ -337,20 +365,20 @@ public class AntMove : GridEntity
                 else
                 {
                     float jump = -1;
-                    foreach (float j in jumpdst)
+                    foreach (float j in m_jumpdst)
                     {
-                        if (dstNsqr < (totalDst - (j + .55f)) * Grid.inst.nodeRadius * 2)
+                        if (dstNsqr < (m_totalDst - (j + .55f)) * Grid.inst.nodeRadius * 2)
                         {
                             m_anim.SetBool("Jump", true);
                             m_anim.SetTrigger("JumpTrigger");
                             jumping = true;
                             jump = j;
-                            jumpAt = ((totalDst - (j + 1.1f))) * Grid.inst.nodeRadius * 2;
+                            jumpAt = ((m_totalDst - (j + 1.1f))) * Grid.inst.nodeRadius * 2;
 
                             SoundManager.inst.PlayJump();
                         }
                     }
-                    if (jump != -1) jumpdst.Remove(jump);
+                    if (jump != -1) m_jumpdst.Remove(jump);
                 }
                 if (status == MoveStatus.cactus)
                 {
@@ -375,7 +403,7 @@ public class AntMove : GridEntity
             {
                 if (status == MoveStatus.pit)
                 {
-                    float y = Mathf.Lerp(m_transform.position.y, -.6f, 1 - (dstNsqr / .4f));
+                    float y = Mathf.Lerp(m_transform.position.y, m_antInAPitYPos, 1 - (dstNsqr / .4f));
                     m_transform.position = new Vector3(m_transform.position.x, y, m_transform.position.z);
                 }
             }
@@ -384,7 +412,7 @@ public class AntMove : GridEntity
             yield return null;
         }
 
-        m_transform.position = new Vector3(node.worldPosition.x, m_transform.position.y, node.worldPosition.z);
+        m_transform.position = new Vector3(node.worldPosition.x, status == MoveStatus.pit ? m_antInAPitYPos : m_antYPos, node.worldPosition.z);
         crtNode = node;
 
         speedMul = 1f;
