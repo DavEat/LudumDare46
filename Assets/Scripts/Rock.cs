@@ -186,7 +186,7 @@ public class Rock : GridEntity
             yield return null;
         }
         //m_transform.position = node.worldPosition;
-        m_transform.position = new Vector3(node.worldPosition.x, m_transform.position.y, node.worldPosition.z);
+        m_transform.position = new Vector3(node.worldPosition.x, isApit ? -1.0f : 0, node.worldPosition.z);
 
         LevelManager.inst.UpdateRockNode(crtNode, this, isApit ? null : node);
         crtNode = isApit ? null : node;

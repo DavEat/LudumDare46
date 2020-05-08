@@ -96,4 +96,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3cbe8b461cdb174abd56612f63844a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_pixelRation: 0.3
   m_effectMat: {fileID: 2100000, guid: 9ee432ec45c6cdb43a7e1bfe5431ff2a, type: 2}
