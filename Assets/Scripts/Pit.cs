@@ -7,9 +7,18 @@ public class Pit : GridEntity
     bool m_full = false;
     public bool full { get { return m_full; } }
 
+    bool m_cracked = false;
+    public bool roofed { get { return m_roof != null && !m_cracked; } }
+    [SerializeField] Animator m_roof = null;
+
     public override void RevertTurn(ITurnAction action)
     {
-        m_full = false;
+        if (action is TurnActionCrack)
+        {
+            m_cracked = false;
+            m_roof.SetTrigger("Restor");
+        }
+        else m_full = false;
     }
 
     public void FullIt()
@@ -19,5 +28,20 @@ public class Pit : GridEntity
 
         m_full = true;
         BackInTimeManager.inst.AddAction(new TurnActionFull(this));
+    }
+
+    public void CrackRoof(bool anim = true, bool revert = true)
+    {
+        if (!roofed) return;
+
+        SoundManager.inst.PlayRocks(.5f);
+        if (anim)
+            m_roof.SetTrigger("Break");
+        else m_roof.Play("RoofDestruction", 0, 1);
+
+        m_cracked = true;
+
+        if (revert)
+            BackInTimeManager.inst.AddAction(new TurnActionCrack(this));
     }
 }

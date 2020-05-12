@@ -68,3 +68,7 @@ public class TurnActionDestroy : TurnAction, ITurnAction
 {
     public TurnActionDestroy(GridEntity entity) : base(entity) { }
 }
+public class TurnActionCrack : TurnAction, ITurnAction
+{
+    public TurnActionCrack(GridEntity entity) : base(entity) { }
+}

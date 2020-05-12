@@ -13,6 +13,7 @@ public class AntMove : GridEntity
     [SerializeField] Animator m_anim = null;
 
     List<float> m_jumpdst = new List<float>();
+    List<float> m_crackdst = new List<float>();
     int m_totalDst = 0;
 
     float m_antYPos = 0;
@@ -97,10 +98,10 @@ public class AntMove : GridEntity
                 break;
         }
     }
-
     public void Move(Vector2 direction)
     {
         m_jumpdst.Clear();
+        m_crackdst.Clear();
 
         Vector3 v3Dir = new Vector3(direction.x, 0, direction.y);
         Node node = Grid.inst.NodeFromWorldPoint(m_transform.position + v3Dir);
@@ -111,17 +112,29 @@ public class AntMove : GridEntity
 
             if (!node.walkable || nodeRock != null) return; //can't push block
 
-            Pit nodePit = LevelManager.inst.IsAPit(node);
-            if (nodePit != null)
             {
-                FallIntoPit(node);
-                return;
-            }
-            Cactus nodeCactus = LevelManager.inst.IsACactus(node);
-            if (nodeCactus != null)
-            {
-                FallIntoCactus(node);
-                return;
+                Pit nodePit = LevelManager.inst.IsAPit(node);
+                if (nodePit != null)
+                {
+                    if (nodePit.roofed)
+                    {
+                        m_crackdst.Add(0);
+                    }
+                    else
+                    {
+                        FallIntoPit(node);
+                        return;
+                    }
+                }
+                else
+                {
+                    Cactus nodeCactus = LevelManager.inst.IsACactus(node);
+                    if (nodeCactus != null)
+                    {
+                        FallIntoCactus(node);
+                        return;
+                    }
+                }
             }
 
             int distance = 0;
@@ -132,7 +145,7 @@ public class AntMove : GridEntity
                 m_totalDst = distance;
                 if (nextNode != null) previousNode = nextNode;
 
-                nextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * (distance));
+                nextNode = Grid.inst.NodeFromWorldPoint(node.worldPosition + v3Dir * distance);
 
                 if (nextNode == null || nextNode == previousNode)
                     break;
@@ -147,7 +160,6 @@ public class AntMove : GridEntity
                         {
                             //nextRock.Broke();
                             GoTo(nextNode, nextRock, false);
-                            break;
                         }
                         else
                         {
@@ -159,7 +171,7 @@ public class AntMove : GridEntity
                                 //nextRock.Hit(moveBlockTo);
                                 Cactus nextCactus = LevelManager.inst.IsACactus(moveBlockTo);
                                 if (nextCactus != null)
-                                     GoTo(previousNode, nextRock, true);
+                                    GoTo(previousNode, nextRock, true);
                                 else GoTo(nextNode, nextRock, true, moveBlockTo);
                             }
                             else
@@ -192,29 +204,55 @@ public class AntMove : GridEntity
 
                         if (nextnextPit != null)
                         {
-                            FallIntoPit(nextnextNode);
-                            return;
+                            if (nextPit.roofed)
+                            {
+                                m_crackdst.Add(distance);
+                                Debug.Log("Crack Above Pit: " + nextNode.gridX + ":" + nextNode.gridY, nextPit.gameObject);
+                            }
+                            else
+                            {
+                                m_jumpdst.Add(distance - 1);
+                                FallIntoPit(nextnextNode);
+                                return;
+                            }
                         }
                         else
                         {
                             Rock nextnextRock = LevelManager.inst.IsARock(nextnextNode);
                             if (nextnextRock != null)
                             {
-                                FallIntoPit(nextNode);
-                                return;
+                                if (nextPit.roofed)
+                                {
+                                    m_crackdst.Add(distance);
+                                }
+                                else
+                                {
+                                    //m_jumpdst.Add(distance - 1);
+                                    FallIntoPit(nextNode);
+                                    return;
+                                }
                             }
                             else
                             {
                                 Cactus nextCactus = LevelManager.inst.IsACactus(nextNode);
                                 if (nextCactus != null)
-                                {
+                                {                                    
                                     FallIntoCactus(nextNode);
                                     return;
                                 }
                                 else
                                 {
-                                    m_jumpdst.Add(distance);
-                                    Debug.Log("Jump Above Pit: " + nextNode.worldPosition, nextPit.gameObject);
+                                    if (nextPit.roofed)
+                                    {
+                                        m_crackdst.Add(distance);
+                                        Debug.Log("Crack Above Pit: " + nextNode.gridX + ":" + nextNode.gridY, nextPit.gameObject);
+                                    }
+                                    else
+                                    {
+                                        m_jumpdst.Add(distance);
+                                        Debug.Log("Jump Above Pit: " + nextNode.gridX + ":" + nextNode.gridY, nextPit.gameObject);
+                                    }
+
                                 }
                             }
                         }
@@ -303,9 +341,7 @@ public class AntMove : GridEntity
     {
         m_animated = true;
 
-        //float dst;
-        bool jumping = false;
-        float jumpAt = 0;
+        float jumpAt = -1;
         m_totalDst++;
         bool inLoseAnim = false;
 
@@ -335,15 +371,49 @@ public class AntMove : GridEntity
             SoundManager.inst.PlayFoot(speedMul);
 
             float dstNsqr = (antPos - nodePos).magnitude;
+            float DST = (startAntPos - antPos).sqrMagnitude;
+
+            float crack = -1;
+            foreach (float c in m_crackdst)
+            {
+                float dst = (c + 1.8f) * Grid.inst.nodeRadius * 2;
+                //if (dstNsqr < dst)
+                if (DST > dst * dst)
+                {
+                    Debug.Log("Crack anim");
+                    crack = c;
+                    Pit p = LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position - m_transform.forward * (Grid.inst.nodeRadius * 2)));
+                    if (p != null)
+                    {
+                        p.CrackRoof();
+                    }
+                }
+            }
+            if (crack != -1) m_crackdst.Remove(crack);
+
             if (!inLoseAnim)
             {
                 if (rock != null) //rock anim
                 {
                     if (hit)
                     {
-                        if (dstNsqr < Grid.inst.nodeRadius * 1.8f)
+                        float mul = rockMoveTo == null ? .3f : 1.8f;
+                        if (dstNsqr < Grid.inst.nodeRadius * mul)
                         {
                             rock.Hit(rockMoveTo, m_moveSpeed);
+
+                            if (rockMoveTo == null)
+                            {
+                                Pit p = LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position));
+                                if (p != null)
+                                {
+                                    p.CrackRoof();
+                                    m_isInAPitOrACactus = true;
+                                    inLoseAnim = true;
+                                    status = MoveStatus.pit;
+                                }
+                            }
+
                             rock = null;
                         }
                     }
@@ -353,33 +423,9 @@ public class AntMove : GridEntity
                         rock = null;
                     }
                 }
-                
-                if (jumping)
-                {
-                    if (dstNsqr < jumpAt)
-                    {
-                        jumping = false;
-                        m_anim.SetBool("Jump", false);
-                    }
-                }
-                else
-                {
-                    float jump = -1;
-                    foreach (float j in m_jumpdst)
-                    {
-                        if (dstNsqr < (m_totalDst - (j + .55f)) * Grid.inst.nodeRadius * 2)
-                        {
-                            m_anim.SetBool("Jump", true);
-                            m_anim.SetTrigger("JumpTrigger");
-                            jumping = true;
-                            jump = j;
-                            jumpAt = ((m_totalDst - (j + 1.1f))) * Grid.inst.nodeRadius * 2;
 
-                            SoundManager.inst.PlayJump();
-                        }
-                    }
-                    if (jump != -1) m_jumpdst.Remove(jump);
-                }
+                jumpAt = JumpTrigger(dstNsqr, jumpAt);
+
                 if (status == MoveStatus.cactus)
                 {
                     if (dstNsqr < .6f * Grid.inst.nodeRadius * 2)
@@ -391,11 +437,14 @@ public class AntMove : GridEntity
                 }
                 else if (status == MoveStatus.pit)
                 {
-                    if (dstNsqr < .4f * Grid.inst.nodeRadius * 2)
+                    float dst = .4f * Grid.inst.nodeRadius * 2;
+                    if (dstNsqr < dst)
                     {
                         inLoseAnim = true;
                         totalDistance -= .1f;
                         Debug.Log("pit anim");
+
+                        LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position + m_transform.forward * dst)).CrackRoof();
                     }
                 }
             }
@@ -438,5 +487,37 @@ public class AntMove : GridEntity
 
         m_transform.position = new Vector3(m_transform.position.x, 0, m_transform.position.z);
         m_animated = false;
+    }
+    float JumpTrigger(float dst, float jumpAt)
+    {
+        float jumpAtNew = -1;
+
+        if (jumpAt > 0)
+        {
+            if (dst < jumpAt)
+            {
+                m_anim.SetBool("Jump", false);
+            }
+            else jumpAtNew = jumpAt;
+        }
+        else
+        {
+            float jump = -1;
+            foreach (float j in m_jumpdst)
+            {
+                if (dst < (m_totalDst - (j + .85f)) * Grid.inst.nodeRadius * 2)
+                {
+                    m_anim.SetBool("Jump", true);
+                    m_anim.SetTrigger("JumpTrigger");
+                    jump = j;
+                    jumpAtNew = ((m_totalDst - (j + 1.5f))) * Grid.inst.nodeRadius * 2;
+
+                    SoundManager.inst.PlayJump();
+                }
+            }
+            if (jump != -1) m_jumpdst.Remove(jump);
+        }
+
+        return jumpAtNew;
     }
 }

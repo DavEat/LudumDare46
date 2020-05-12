@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor;
 
 public class Grid : Singleton<Grid>
 {
@@ -189,6 +190,16 @@ public class Grid : Singleton<Grid>
 
     private void OnDrawGizmos()
     {
+        if (grid != null)
+        {
+            foreach (Node n in grid)
+            {
+                GUIStyle style = new GUIStyle();
+                style.fontSize *= 3;
+                Handles.Label(n.worldPosition, n.gridX + ", " + n.gridY, style);
+            }
+        }
+
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
 
         if (displayGridGizmos && grid != null)

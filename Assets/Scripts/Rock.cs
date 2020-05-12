@@ -118,14 +118,15 @@ public class Rock : GridEntity
         if (pit != null)
         {
             pit.FullIt();
+            BackInTimeManager.inst.AddAction(new TurnActionCrack(pit));
             m_onAPit = true;
             //m_transform.position = crtNode.worldPosition + Vector3.down;
             Debug.Log("Rock is on a pit", gameObject);
-            StartCoroutine(HitAnim(newNode, speed, true));
+            StartCoroutine(HitAnim(newNode, speed, pit));
         }
         else
         {
-            StartCoroutine(HitAnim(newNode, speed, false));
+            StartCoroutine(HitAnim(newNode, speed));
         }
 
         //m_transform.position = crtNode.worldPosition;
@@ -145,7 +146,7 @@ public class Rock : GridEntity
         SoundManager.inst.PlayRocks(.7f);
     }
 
-    IEnumerator HitAnim(Node node, float speed, bool isApit)
+    IEnumerator HitAnim(Node node, float speed, Pit pit = null)
     {
         //float dst;
         bool checkWaterBubble = false;
@@ -172,13 +173,17 @@ public class Rock : GridEntity
                 if (w) w.Spread();
             }
 
-            if (isApit)
+            if (pit)
             {
                 float d = (nodePos - rockPos).magnitude;
                 if (d < .3f)
                 {
                     float y = Mathf.Lerp(m_transform.position.y, -1.0f, 1 - (d / .3f));
                     m_transform.position = new Vector3(m_transform.position.x, y, m_transform.position.z);
+                }
+                if (d < .2f)
+                {
+                    pit.CrackRoof(false, false);
                 }
             }
 
@@ -188,7 +193,7 @@ public class Rock : GridEntity
         //m_transform.position = node.worldPosition;
         m_transform.position = new Vector3(node.worldPosition.x, m_transform.position.y, node.worldPosition.z);
 
-        LevelManager.inst.UpdateRockNode(crtNode, this, isApit ? null : node);
-        crtNode = isApit ? null : node;
+        LevelManager.inst.UpdateRockNode(crtNode, this, pit ? null : node);
+        crtNode = pit ? null : node;
     }
 }
