@@ -16,8 +16,8 @@ public class AntMove : GridEntity
     List<float> m_crackdst = new List<float>();
     int m_totalDst = 0;
 
-    float m_antYPos = 0;
-    float m_antInAPitYPos = -.6f;
+    const float m_antYPos = 0;
+    const float m_antInAPitYPos = -.6f;
 
 
     protected override void Start()
@@ -171,11 +171,27 @@ public class AntMove : GridEntity
                                 //nextRock.Hit(moveBlockTo);
                                 Cactus nextCactus = LevelManager.inst.IsACactus(moveBlockTo);
                                 if (nextCactus != null)
+                                {
+                                    Pit previoustPit = LevelManager.inst.IsAPit(previousNode);
+                                    if (previoustPit != null && previoustPit.roofed)
+                                    {
+                                        FallIntoPit(previousNode, true);
+                                        return;
+                                    }
+
                                     GoTo(previousNode, nextRock, true);
+                                }
                                 else GoTo(nextNode, nextRock, true, moveBlockTo);
                             }
                             else
                             {
+                                Pit previoustPit = LevelManager.inst.IsAPit(previousNode);
+                                if (previoustPit != null && previoustPit.roofed)
+                                {
+                                    FallIntoPit(previousNode, true);
+                                    return;
+                                }
+
                                 //nextRock.Hit();
                                 GoTo(previousNode, nextRock, true);
                             }
@@ -188,6 +204,13 @@ public class AntMove : GridEntity
                         {
                             Debug.Log("Move one");
                             speedMul = .5f;
+                        }
+
+                        Pit previoustPit = LevelManager.inst.IsAPit(previousNode);
+                        if (previoustPit != null && previoustPit.roofed)
+                        {
+                            FallIntoPit(previousNode, true);
+                            return;
                         }
 
                         GoTo(previousNode);
@@ -316,15 +339,15 @@ public class AntMove : GridEntity
         }
         return false;
     }
-    void FallIntoPit(Node node)
+    void FallIntoPit(Node node, bool roofed = false)
     {
         BackInTimeManager.inst.AddAction(new TurnActionMoveRotate(crtNode, m_transform.eulerAngles.y, this));
 
         m_isInAPitOrACactus = true;
         //m_transform.position = node.worldPosition + Vector3.down * .6f;
         //crtNode = node;
-        Debug.Log("Fall into pit");
-        StartCoroutine(GoToActionAnim(node, MoveStatus.pit));
+        Debug.Log("Fall into " + (roofed ? "roofed " : "") + "pit");
+        StartCoroutine(GoToActionAnim(node, roofed ? MoveStatus.roofedPit : MoveStatus.pit));
     }
     void FallIntoCactus(Node node)
     {
@@ -336,7 +359,7 @@ public class AntMove : GridEntity
         Debug.Log("Fall into cactus");
         StartCoroutine(GoToActionAnim(node, MoveStatus.cactus));
     }
-    enum MoveStatus { none, rock, cactus, pit }
+    enum MoveStatus { none, rock, cactus, pit, roofedPit }
     IEnumerator GoToActionAnim(Node node, MoveStatus status = MoveStatus.rock, Rock rock = null, bool hit = false, Node rockMoveTo = null)
     {
         m_animated = true;
@@ -401,19 +424,6 @@ public class AntMove : GridEntity
                         if (dstNsqr < Grid.inst.nodeRadius * mul)
                         {
                             rock.Hit(rockMoveTo, m_moveSpeed);
-
-                            if (rockMoveTo == null)
-                            {
-                                Pit p = LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position));
-                                if (p != null)
-                                {
-                                    p.CrackRoof();
-                                    m_isInAPitOrACactus = true;
-                                    inLoseAnim = true;
-                                    status = MoveStatus.pit;
-                                }
-                            }
-
                             rock = null;
                         }
                     }
@@ -438,13 +448,14 @@ public class AntMove : GridEntity
                 else if (status == MoveStatus.pit)
                 {
                     float dst = .4f * Grid.inst.nodeRadius * 2;
+
                     if (dstNsqr < dst)
                     {
                         inLoseAnim = true;
                         totalDistance -= .1f;
                         Debug.Log("pit anim");
 
-                        LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position + m_transform.forward * dst)).CrackRoof();
+                        LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position + m_transform.forward * dst)).CrackRoofFromJump();
                     }
                 }
             }
@@ -467,6 +478,10 @@ public class AntMove : GridEntity
         speedMul = 1f;
         m_anim.SetFloat("Speed", 0);
         m_anim.SetBool("Jump", false);
+        
+        if (status == MoveStatus.roofedPit)
+            yield return FallRoofedPit();
+        
         m_animated = false;
 
         CheckVictoryCollectibles(node);
@@ -488,6 +503,32 @@ public class AntMove : GridEntity
         m_transform.position = new Vector3(m_transform.position.x, 0, m_transform.position.z);
         m_animated = false;
     }
+    IEnumerator FallRoofedPit()
+    {
+        bool anim = true;
+
+        Pit p = LevelManager.inst.IsAPit(Grid.inst.NodeFromWorldPoint(m_transform.position));
+        if (p != null)
+        {
+            p.CrackRoof();
+        }
+
+        yield return new WaitForSeconds(.2f);
+
+        while (anim)
+        {
+            float y = Mathf.Lerp(m_transform.position.y, m_antInAPitYPos, Time.deltaTime * m_moveSpeed * .5f);
+            m_transform.position = new Vector3(m_transform.position.x, y, m_transform.position.z);
+
+            if (m_antInAPitYPos < m_transform.position.y)
+                anim = false;
+
+            yield return null;
+        }
+
+        m_transform.position = new Vector3(m_transform.position.x, m_antInAPitYPos, m_transform.position.z);
+    }
+
     float JumpTrigger(float dst, float jumpAt)
     {
         float jumpAtNew = -1;

@@ -406,12 +406,12 @@ GameObject:
   - component: {fileID: 4825678041954569622}
   - component: {fileID: 1429800246}
   m_Layer: 0
-  m_Name: Crack
+  m_Name: PitRoof
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4825678041954569622
 Transform:
   m_ObjectHideFlags: 0

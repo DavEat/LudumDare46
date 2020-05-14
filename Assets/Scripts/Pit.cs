@@ -32,11 +32,19 @@ public class Pit : GridEntity
 
     public void CrackRoof(bool anim = true, bool revert = true)
     {
+        CrackTheRoof(anim, revert, false);
+    }
+    public void CrackRoofFromJump(bool anim = true, bool revert = true)
+    {
+        CrackTheRoof(anim, revert, true);
+    }
+    void CrackTheRoof(bool anim = true, bool revert = true, bool jump = false)
+    {
         if (!roofed) return;
 
         SoundManager.inst.PlayRocks(.5f);
         if (anim)
-            m_roof.SetTrigger("Break");
+            m_roof.SetTrigger(jump ? "BreakJump" : "Break");
         else m_roof.Play("RoofDestruction", 0, 1);
 
         m_cracked = true;
